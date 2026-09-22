@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.id == null ? 'Create Post' : 'Edit Post'}">Blog Post</title>
+
+    <link rel="stylesheet" th:href="@{/style.css}">
+
+    <!-- JavaScript reads these values for the AI POST request -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+</head>
+
+<body>
+<div class="container">
+
+    <h2 th:text="${post.id == null ? 'Create New Blog Post' : 'Edit Blog Post'}">
+        Post Form
+    </h2>
+
+    <form th:action="@{/post/save}" th:object="${post}" method="post">
+
+        <!-- CSRF token for normal Save Post request -->
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}">
+
+        <input type="hidden" th:field="*{id}">
+
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text"
+                   id="title"
+                   th:field="*{title}"
+                   required
+                   placeholder="Enter post title">
+        </div>
+
+        <div class="form-group" th:if="${isAdmin}">
+            <label for="author">Author Name</label>
+            <input type="text"
+                   id="author"
+                   th:field="*{author}"
+                   readonly
+                   placeholder="Enter author name">
+        </div>
+
+        <div class="form-group">
+            <label for="excerpt">Excerpt (Optional Summary)</label>
+            <input type="text"
+                   id="excerpt"
+                   th:field="*{excerpt}"
+                   placeholder="Short excerpt summary...">
+        </div>
+
+        <div class="form-group">
+            <label for="content">Content</label>
+            <textarea id="content"
+                      th:field="*{content}"
+                      required
+                      placeholder="Write post content here..."></textarea>
+        </div>
+
+        <button type="button" id="ai-suggest-btn" class="btn ai-suggest-btn">
+            <span class="ai-suggest-icon">✦</span>
+            Suggest excerpt &amp; tags with AI
+        </button>
+
+        <span id="ai-status"></span>
+
+        <div class="form-group">
+            <label for="rawTags">Tags (Comma-separated)</label>
+            <input type="text"
+                   id="rawTags"
+                   name="rawTags"
+                   th:value="${rawTags}"
+                   placeholder="java, springboot, backend">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn">Save Post</button>
+            <a href="/" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.getElementById('ai-suggest-btn').addEventListener('click', async () => {
+
+        const content = document.getElementById('content').value;
+        const statusEl = document.getElementById('ai-status');
+
+        // Read CSRF details that Thymeleaf placed in the HTML
+        const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+
+        if (!content.trim()) {
+            statusEl.textContent = 'Write some content first';
+            return;
+        }
+
+        statusEl.textContent = 'Thinking...';
+
+        try {
+            const res = await fetch('/post/ai-suggest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify({ content: content })
+            });
+
+            if (!res.ok) {
+                statusEl.textContent = 'Request failed (' + res.status + ')';
+                console.error('AI suggest failed:', res.status, await res.text());
+                return;
+            }
+
+            const text = await res.text();
+
+            const excerptMatch = text.match(/EXCERPT:\s*(.+)/i);
+            const tagsMatch = text.match(/TAGS:\s*(.+)/i);
+
+            if (excerptMatch) {
+                document.getElementById('excerpt').value = excerptMatch[1].trim();
+            }
+
+            if (tagsMatch) {
+                document.getElementById('rawTags').value = tagsMatch[1].trim();
+            }
+
+            statusEl.textContent = (excerptMatch || tagsMatch)
+                ? 'Suggestion added ✓'
+                : 'Could not parse suggestion';
+
+        } catch (err) {
+            statusEl.textContent = 'Something went wrong';
+            console.error('AI suggest error:', err);
+        }
+    });
+</script>
+
+</body>
+</html>

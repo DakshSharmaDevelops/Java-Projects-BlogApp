@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Tech &amp; Stories Blog</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<div class="container login-container">
+    <h1>Tech &amp; Stories Blog</h1>
+    <p class="login-subtitle">Choose how you want to log in.</p>
+    <div class="login-options">
+        <a class="btn login-option" th:href="@{/login/admin}">Login as Admin</a>
+        <a class="btn login-option" th:href="@{/login/user}">Login as User</a>
+    </div>
+</div>
+</body>
+</html>

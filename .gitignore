@@ -1,0 +1,8 @@
+target/
+.idea/
+*.iml
+.DS_Store
+
+# Local environment and secrets
+.env
+application-local.properties

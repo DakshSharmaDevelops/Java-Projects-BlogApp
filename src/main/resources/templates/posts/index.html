@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Blog Application - Feed</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<div class="container">
+    <div class="sticky-blog-tools">
+        <div class="header">
+            <a class="blog-logo" href="/">Tech &amp; Stories Blog</a>
+            <div>
+                <a th:if="${loggedIn}" href="/post/new" class="btn btn-success">+ Create New Post</a>
+                <a th:if="${!loggedIn}" href="/login" class="btn">Login</a>
+                <form th:if="${loggedIn}" th:action="@{/logout}" method="post" style="display:inline;">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn">Logout</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Search & Filter Controls -->
+        <div class="filter-section">
+            <form method="get" action="/" class="filter-form">
+                <div class="form-group">
+                    <label>Search</label>
+                    <input type="text" name="search" th:value="${search}" placeholder="Keyword..." />
+                </div>
+
+                <div class="form-group">
+                    <label>Filter by Authors</label>
+                    <select name="author" multiple size="2">
+                        <option th:each="auth : ${authorsList}" th:value="${auth}" th:text="${auth}"
+                                th:selected="${selectedAuthors != null && selectedAuthors.contains(auth)}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Filter by Tags</label>
+                    <select name="tagId" multiple size="1">
+                        <option th:each="t : ${tagsList}" th:value="${t.id}" th:text="${t.name}"
+                                th:selected="${selectedTags != null && selectedTags.contains(t.id)}"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Sort By</label>
+                    <select name="sortField">
+                        <option value="publishedAt" th:selected="${sortField == 'publishedAt'}">Published Date</option>
+                        <option value="title" th:selected="${sortField == 'title'}">Title</option>
+                        <option value="author" th:selected="${sortField == 'author'}">Author</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Order</label>
+                    <select name="order">
+                        <option value="desc" th:selected="${order == 'desc'}">Descending</option>
+                        <option value="asc" th:selected="${order == 'asc'}">Ascending</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="flex-direction: row; gap: 5px;">
+                    <button type="submit" class="btn btn-sm">Apply Filters</button>
+                    <a href="/" class="btn btn-sm" style="background: #6c757d;">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Posts Feed -->
+    <div th:if="${posts.empty}" style="text-align: center; padding: 40px; color: #6c757d;">
+        No posts found matching your criteria.
+    </div>
+
+    <div th:each="post : ${posts}" class="post-card">
+        <h2 class="post-title"><a th:href="@{'/post/' + ${post.id}}" th:text="${post.title}">Title</a></h2>
+        <div class="post-meta">
+            By <strong th:text="${post.author}">Author</strong> |
+            Published on <span th:text="${#temporals.format(post.publishedAt, 'MMM dd, yyyy HH:mm')}">Date</span>
+        </div>
+        <p th:text="${post.excerpt}">Excerpt content here...</p>
+
+        <div class="tags">
+            <span th:each="t : ${post.tags}" class="tag-badge" th:text="'#' + ${t.name}">#tag</span>
+        </div>
+
+        <div style="margin-top: 15px; display: flex; gap: 10px; align-items: center;">
+            <a th:if="${isAdmin or (loggedIn and post.authorUser != null and post.authorUser.email == currentUserEmail)}"
+               th:href="@{'/post/edit/' + ${post.id}}" class="btn btn-sm" style="background:#ffc107; color:black;">Edit</a>
+            <form th:if="${isAdmin or (loggedIn and post.authorUser != null and post.authorUser.email == currentUserEmail)}"
+                  th:action="@{'/post/delete/' + ${post.id}}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Delete this post?')">Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Offset Pagination -->
+    <div class="pagination" th:if="${totalElements > 0}">
+        <div>
+            <a th:if="${start > 1}" class="pagination-link"
+               th:href="@{/(start=${start - limit}, limit=${limit}, search=${search}, author=${selectedAuthors}, tagId=${selectedTags}, sortField=${sortField}, order=${order})}">← Previous Page</a>
+        </div>
+
+        <div style="font-size: 0.9em; color: #6c757d;">
+            Showing <span th:text="${start}"></span> - <span th:text="${start + posts.size() - 1}"></span> of <span th:text="${totalElements}"></span> posts
+        </div>
+
+        <div>
+            <a th:if="${start + limit <= totalElements}" class="pagination-link"
+               th:href="@{/(start=${start + limit}, limit=${limit}, search=${search}, author=${selectedAuthors}, tagId=${selectedTags}, sortField=${sortField}, order=${order})}">Next Page →</a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

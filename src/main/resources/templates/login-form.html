@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${loginType == 'admin' ? 'Admin Login' : 'User Login'}">Login</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+<div class="container login-container">
+    <h1 th:text="${loginType == 'admin' ? 'Admin Login' : 'User Login'}">Login</h1>
+
+    <p class="login-error" th:if="${param.error == 'role'}">
+        These credentials do not belong to this login type.
+    </p>
+    <p class="login-error" th:if="${param.error != null and param.error != 'role'}">
+        Invalid username or password.
+    </p>
+    <p class="login-message" th:if="${param.logout}">You have been logged out.</p>
+
+    <form th:action="@{/login}" method="post">
+        <input type="hidden" name="loginType" th:value="${loginType}">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+        <div class="form-group">
+            <label for="username">Email address</label>
+            <input id="username" name="username" type="email" required autofocus>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" required>
+        </div>
+        <button class="btn" type="submit">Login</button>
+        <a class="btn btn-secondary" th:href="@{/login}">Back</a>
+        <a th:if="${loginType == 'user'}" class="login-register-link" th:href="@{/register}">
+            Create a user account
+        </a>
+    </form>
+</div>
+</body>
+</html>
