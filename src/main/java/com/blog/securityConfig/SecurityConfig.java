@@ -27,6 +27,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/post/new").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/post/edit/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.GET, "/post/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/post/save").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/post/delete/**").hasAnyRole("ADMIN", "USER")
                         .requestMatchers(HttpMethod.POST, "/post/ai-suggest").hasAnyRole("ADMIN", "USER")

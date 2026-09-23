@@ -38,13 +38,13 @@ public class PostService {
         return postRepository.findById(id).orElseThrow(() -> new RuntimeException("Post not found: " + id));
     }
 
-    public void savePost(Post post, String rawTags) {
+    public Post savePost(Post post, String rawTags) {
         Set<Tag> tags = processTags(rawTags);
         post.setTags(tags);
         if (post.getExcerpt() == null || post.getExcerpt().isEmpty()) {
             post.setExcerpt(post.getContent().length() > 150 ? post.getContent().substring(0, 150) + "..." : post.getContent());
         }
-        postRepository.save(post);
+        return postRepository.save(post);
     }
 
     public void deletePost(Long id) {
