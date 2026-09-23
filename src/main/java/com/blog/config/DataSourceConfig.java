@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 import java.net.URI;
 import java.net.URLDecoder;
@@ -13,12 +14,17 @@ import java.nio.charset.StandardCharsets;
 @Configuration
 @EnableConfigurationProperties(DataSourceProperties.class)
 public class DataSourceConfig {
+    private final Environment environment;
+
+    public DataSourceConfig(Environment environment) {
+        this.environment = environment;
+    }
 
     @Bean
     public HikariDataSource dataSource(DataSourceProperties properties) {
         String configuredUrl = properties.getUrl();
         if (configuredUrl == null || configuredUrl.isBlank()) {
-            throw new IllegalStateException("Database URL is not configured");
+            configuredUrl = buildUrlFromParts();
         }
 
         DatabaseConnection connection = parseConnection(configuredUrl);
@@ -35,6 +41,13 @@ public class DataSourceConfig {
                 .build();
     }
 
+    private String buildUrlFromParts() {
+        String host = environment.getProperty("dbHost", "localhost");
+        String port = environment.getProperty("dbPort", "5432");
+        String database = environment.getProperty("dbName", "blogdb");
+        return "jdbc:postgresql://" + host + ":" + port + "/" + database;
+    }
+
     private DatabaseConnection parseConnection(String configuredUrl) {
         String url = configuredUrl.trim();
         if (url.startsWith("jdbc:")) {
@@ -45,7 +58,7 @@ public class DataSourceConfig {
         }
 
         URI uri = URI.create(url);
-        String userInfo = uri.getUserInfo();
+        String userInfo = uri.getRawUserInfo();
         String username = null;
         String password = null;
         if (userInfo != null) {
@@ -67,7 +80,7 @@ public class DataSourceConfig {
     }
 
     private String decode(String value) {
-        return URLDecoder.decode(value, StandardCharsets.UTF_8);
+        return URLDecoder.decode(value.replace("+", "%2B"), StandardCharsets.UTF_8);
     }
 
     private record DatabaseConnection(String jdbcUrl, String username, String password) {
