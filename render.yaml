@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: blog-app
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /
+    envVars:
+      - key: dbUrl
+        fromDatabase:
+          name: blog-db
+          property: connectionString
+      - key: dbUsername
+        fromDatabase:
+          name: blog-db
+          property: user
+      - key: dbPassword
+        fromDatabase:
+          name: blog-db
+          property: password
+      - key: GROQ_API_KEY
+        sync: false
+
+databases:
+  - name: blog-db
+    databaseName: blogdb
+    user: bloguser
+    plan: free
