@@ -6,10 +6,18 @@ services:
     dockerfilePath: ./Dockerfile
     healthCheckPath: /
     envVars:
-      - key: dbUrl
+      - key: dbHost
         fromDatabase:
           name: blog-db
-          property: connectionString
+          property: host
+      - key: dbPort
+        fromDatabase:
+          name: blog-db
+          property: port
+      - key: dbName
+        fromDatabase:
+          name: blog-db
+          property: database
       - key: dbUsername
         fromDatabase:
           name: blog-db
